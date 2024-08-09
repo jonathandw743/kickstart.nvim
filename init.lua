@@ -808,15 +808,6 @@ require('lazy').setup({
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
-    opts = {
-      style = 'night', -- choose your preferred style (night, storm, day, moon)
-      transparent = true, -- enable transparent background
-      terminal_colors = true, -- configure terminal colors to match theme
-      styles = {
-        sidebars = 'transparent', -- make sidebars transparent
-        floats = 'transparent', -- make floating windows transparent
-      },
-    },
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
