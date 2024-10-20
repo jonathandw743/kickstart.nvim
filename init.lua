@@ -183,6 +183,9 @@ vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save' })
 
 vim.keymap.set({ 'n', 'v' }, ';', ':')
 
+-- make diagnostic messages show when using C-c to go to normal mode
+vim.keymap.set({ 'i', 'v' }, '<C-c>', '<Esc>')
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -592,7 +595,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -930,6 +933,26 @@ require('lazy').setup({
           end
         end,
       }
+    end,
+  },
+  -- {
+  --   'saecki/crates.nvim',
+  --   ft = { 'toml' },
+  --   config = function(_, opts)
+  --     local crates = require 'crates'
+  --     crates.setup(opts)
+  --     require('cmp').setup.buffer {
+  --       sources = { { name = 'crates' } },
+  --     }
+  --     crates.show()
+  --     require('core.utils').load_mappings 'crates'
+  --   end,
+  -- },
+  {
+    'saecki/crates.nvim',
+    tag = 'stable',
+    config = function()
+      require('crates').setup()
     end,
   },
 }, {
