@@ -179,9 +179,22 @@ vim.keymap.set('n', '<leader>tr', '<cmd>set relativenumber!<CR>', { desc = '[T]o
 
 -- vim.keymap.set('n', '<leader>ot', '<C-w>v<cmd>terminal<CR>i', { desc = '[O]pen [T]erminal' })
 
-vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save' })
+vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
+  vim.cmd 'write'
+end, { desc = 'Save' })
 
-vim.keymap.set({ 'n', 'v' }, ';', ':')
+-- my random stuff
+vim.keymap.set({ 'n', 'v' }, ';', ':', { desc = 'Easy command mode' })
+vim.keymap.set({ 'n', 'v' }, '<C-j>', 'j<C-e>', { desc = 'Scroll down with cursor' })
+vim.keymap.set({ 'n', 'v' }, '<C-k>', 'k<C-y>', { desc = 'Scroll down with cursor' })
+vim.keymap.set({ 'n', 'v' }, '<tab>', '<cmd>bn<CR>', { desc = 'Quick next buffer' })
+vim.keymap.set({ 'n', 'v' }, '<tab>', '<cmd>bn<CR>', { desc = 'Quick next buffer' })
+
+vim.keymap.set('n', '\\', vim.diagnostic.open_float, { desc = 'Show full diagnostic' })
+
+vim.keymap.set('n', '<Leader>sa', function()
+  require('telescope.builtin').find_files { find_command = { 'rg', '--files', '--hidden', '--no-ignore', '-g', '!.git' } }
+end, { desc = 'Search all files' })
 
 -- make diagnostic messages show when using C-c to go to normal mode
 vim.keymap.set({ 'i', 'v' }, '<C-c>', '<Esc>')
@@ -195,19 +208,19 @@ vim.keymap.set({ 'i', 'v' }, '<C-c>', '<Esc>')
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+-- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+-- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+-- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- vim.keymap.set('t', '<C-h>', '<C-\\><C-n><C-w><C-h>', { desc = 'Move focus to the left window' })
 -- vim.keymap.set('t', '<C-l>', '<C-\\><C-n><C-w><C-l>', { desc = 'Move focus to the right window' })
@@ -239,6 +252,14 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
+
+-- Set specific commentstring for a language
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'wgsl',
+  callback = function()
+    vim.bo.commentstring = '// %s'
+  end,
+})
 
 -- [[ Configure and install plugins ]]
 --
@@ -379,6 +400,7 @@ require('lazy').setup({
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      'nvim-telescope/telescope-file-browser.nvim',
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -402,20 +424,22 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      local actions = require 'telescope.actions'
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          mappings = {
+            i = { ['<c-enter>'] = 'to_fuzzy_refine', ['<Esc>'] = actions.close, ['<C-y>'] = actions.select_default },
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          'file_browser',
         },
       }
 
@@ -432,6 +456,12 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>sd', function()
+        builtin.diagnostics {} -- bufnr = 0 }
+      end, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>se', function()
+        builtin.diagnostics { severity = vim.diagnostic.severity.ERROR } --, bufnr = 0 }
+      end, { desc = '[S]earch [E]rrors' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -629,11 +659,16 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
         pyright = {},
-        rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
+        rust_analyzer = { -- {}, {
+          settings = {
+            ['rust-analyzer'] = { diagnostics = { enable = true, enableExperimental = true } }, -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
+          },
+        },
+        wgsl_analyzer = {},
+
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
@@ -729,6 +764,7 @@ require('lazy').setup({
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         python = { 'isort', 'black' },
+        -- python = { 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -916,7 +952,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'wgsl_bevy' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -958,24 +994,24 @@ require('lazy').setup({
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   -- { import = 'custom.plugins' },
-  {
-    'akinsho/toggleterm.nvim',
-    version = '*',
-    tag = '*',
-    config = function()
-      require('toggleterm').setup {
-        open_mapping = '<C-\\>',
-        direction = 'vertical',
-        size = function(term)
-          if term.direction == 'horizontal' then
-            return 15
-          elseif term.direction == 'vertical' then
-            return vim.o.columns * 0.3
-          end
-        end,
-      }
-    end,
-  },
+  -- {
+  --   'akinsho/toggleterm.nvim',
+  --   version = '*',
+  --   tag = '*',
+  --   config = function()
+  --     require('toggleterm').setup {
+  --       open_mapping = '<C-\\>',
+  --       direction = 'vertical',
+  --       size = function(term)
+  --         if term.direction == 'horizontal' then
+  --           return 15
+  --         elseif term.direction == 'vertical' then
+  --           return vim.o.columns * 0.3
+  --         end
+  --       end,
+  --     }
+  --   end,
+  -- },
   -- {
   --   'saecki/crates.nvim',
   --   ft = { 'toml' },
