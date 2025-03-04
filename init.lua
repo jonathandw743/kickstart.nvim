@@ -188,7 +188,6 @@ vim.keymap.set({ 'n', 'v' }, ';', ':', { desc = 'Easy command mode' })
 vim.keymap.set({ 'n', 'v' }, '<C-j>', 'j<C-e>', { desc = 'Scroll down with cursor' })
 vim.keymap.set({ 'n', 'v' }, '<C-k>', 'k<C-y>', { desc = 'Scroll down with cursor' })
 vim.keymap.set({ 'n', 'v' }, '<tab>', '<cmd>bn<CR>', { desc = 'Quick next buffer' })
-vim.keymap.set({ 'n', 'v' }, '<tab>', '<cmd>bn<CR>', { desc = 'Quick next buffer' })
 
 vim.keymap.set('n', '\\', vim.diagnostic.open_float, { desc = 'Show full diagnostic' })
 
@@ -446,6 +445,7 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'file_browser')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -462,7 +462,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>se', function()
         builtin.diagnostics { severity = vim.diagnostic.severity.ERROR } --, bufnr = 0 }
       end, { desc = '[S]earch [E]rrors' })
-      vim.keymap.set('n', '<leader>sb', builtin.file_browser, { desc = '[S]earch File [B]rowser' })
+      vim.keymap.set('n', '<leader>sb', '<cmd>Telescope file_browser<CR>', { desc = '[S]earch File [B]rowser' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -972,7 +972,16 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
-
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+    opts = {
+      -- check_ts = true,
+    },
+    -- use opts = {} for passing setup options
+    -- this is equivalent to setup({}) function
+  },
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1032,6 +1041,17 @@ require('lazy').setup({
     config = function()
       require('crates').setup()
     end,
+  },
+  {
+    'stevearc/oil.nvim',
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {},
+    -- Optional dependencies
+    dependencies = { { 'echasnovski/mini.icons', opts = {} } },
+    -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
+    -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
+    lazy = false,
   },
 }, {
   ui = {
