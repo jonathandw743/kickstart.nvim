@@ -168,6 +168,12 @@ vim.o.confirm = true
 
 -- MINE
 vim.o.wrap = false
+-- vim.o.expandtab = true
+-- vim.opt.shiftwidth = 4 -- Size of an indent
+vim.opt.softtabstop = 4 -- Number of spaces a tab feels like while editing
+-- vim.opt.tabstop = 4 -- Number of spaces a tab actually represents
+-- vim.wo.foldmethod = 'expr'
+-- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -180,10 +186,18 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- MINE
+-- -- Normal mode: 'x' deletes like 'd' but doesn't yank
+-- vim.keymap.set('n', 'x', '"_d', { noremap = true, silent = true })
+-- -- Visual mode: 'x' deletes selection without yanking
+-- vim.keymap.set('v', 'x', '"_d', { noremap = true, silent = true })
 -- keymap to toggle word wrap
 vim.keymap.set('n', '<leader>tw', '<cmd>set wrap!<CR>', { desc = '[T]oggle [W]rap' })
 -- keymap to toggle line numbers
-vim.keymap.set('n', '<leader>tn', '<cmd>set number!<CR>', { desc = '[T]oggle line Numbers' })
+vim.keymap.set('n', '<leader>tn', '<cmd>set number!<CR>', { desc = '[T]oggle line numbers' })
+-- keymap to toggle winbar
+-- vim.keymap.set('n', '<leader>tb', function()
+--   vim.o.winbar = vim.o.winbar == '' and '%f' or ''
+-- end, { desc = '[T]oggle win[B]ar' })
 -- keymap to toggle relative line numbers
 vim.keymap.set('n', '<leader>tr', '<cmd>set relativenumber!<CR>', { desc = '[T]oggle [R]elative line numbers' })
 vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
@@ -446,6 +460,9 @@ require('lazy').setup({
         --   },
         -- },
         -- pickers = {}
+        -- defaults = {
+        --   layout_strategy = 'vertical',
+        -- },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -466,6 +483,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>se', function()
+        builtin.diagnostics { severity = vim.diagnostic.severity.ERROR } --, bufnr = 0 }
+      end, { desc = '[S]earch [E]rrors' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -652,6 +672,7 @@ require('lazy').setup({
           --
           -- This may be unwanted, since they displace some of your code
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+            vim.lsp.inlay_hint.enable()
             map('<leader>th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
@@ -707,7 +728,23 @@ require('lazy').setup({
         clangd = {},
         -- gopls = {},
         pyright = {},
-        rust_analyzer = {},
+        rust_analyzer = {
+          procMacro = { enable = true },
+          cargo = { features = 'all' },
+          check = {
+            -- command = "clippy",
+            extraArgs = {
+              '--target-dir=target/analyzer',
+            },
+          },
+          server = {
+            extraEnv = {
+              CARGO_TARGET_DIR = 'target/analyzer',
+            },
+          },
+        },
+        glsl_analyzer = {},
+        ols = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -755,7 +792,8 @@ require('lazy').setup({
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
+        automatic_installation = true,
+        automatic_enable = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -989,6 +1027,9 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      fold = {
+        enable = true,
+      },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1004,6 +1045,18 @@ require('lazy').setup({
       require('crates').setup()
     end,
     'nvim-treesitter/nvim-treesitter-context',
+  },
+  {
+    'Isrothy/neominimap.nvim',
+    keys = {
+      { '<leader>tm', '<cmd>Neominimap Toggle<cr>', desc = '[T]oggle [M]inimap globally' },
+    },
+    init = function()
+      vim.g.neominimap = {
+        auto_enable = true,
+        layout = 'split',
+      }
+    end,
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
